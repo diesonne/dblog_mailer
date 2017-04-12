@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * Installation and update functions for DbLog Mailer module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_schema().
+ */
+function dblog_mailer_schema() {
+  // Note: to respect Core's naming legacy (dblog module/watchdog table), this
+  // module declares a table called watchdog_mailer, and not dblog_mailer.
+  $schema['watchdog_mailer'] = array(
+    'description' => 'Stores trace of logs processed by the DbLog Mailer module',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique email ID.',
+      ),
+      'wid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {watchdog}.wid of the log entry being processed.',
+      ),
+      'subject' => array(
+        'description' => 'The email subject.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'recipients' => array(
+        'description' => 'The email recipients.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'message' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'description' => 'The email body.',
+      ),
+      'delivery_status' => array(
+        'description' => 'The delivery status of the email for this log entry.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}

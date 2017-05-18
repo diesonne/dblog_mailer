@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\dblog_mailer\Form\DbLogMailerSettingsForm.
- */
-
 namespace Drupal\dblog_mailer\Form;
 
 use Drupal\Core\Form\ConfigFormBase;

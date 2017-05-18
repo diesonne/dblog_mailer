@@ -94,9 +94,9 @@ class DbLogMailer {
     $this->rowLimit     = $this->config->get('default_row_limit');
     $this->enableEmails = $this->config->get('enable');
     $this->replyTo      = !empty($this->config->get('reply_to')) ? $this->config->get('reply_to') : null;
-    $this->logs         = array();
-    $this->emails       = array();
-    $this->channels     = array();
+    $this->logs         = [];
+    $this->emails       = [];
+    $this->channels     = [];
     $this->initializeEmailsAndChannels();
   }
 
@@ -112,7 +112,7 @@ class DbLogMailer {
           \Drupal::logger('dbloger_mail')->error("DBLog email configuration is not correct");
           //throw new Exception("DBLog email configuration is not correct");
         } else {
-          $email_item = array();
+          $email_item = [];
           $email_item['channel'] = $email_row[0];
           $email_item['subject'] = $email_row[1];
           $email_item['recipients'] = $email_row[2];
@@ -155,14 +155,14 @@ class DbLogMailer {
    *    - returns null if one of the email addresses does not validate
    * */
   private function buildReceipientsList($recipients) {
-    $recipients_list = array();
+    $recipients_list = [];
     $recipients_list = explode(";", $recipients);
     foreach ($recipients_list as $recipient) {
       // As we are here, let's validate the recipients email addresses
       if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
-        \Drupal::logger('dblog_mailer')->error("Invalid recipient address: @recipient", array(
+        \Drupal::logger('dblog_mailer')->error("Invalid recipient address: @recipient", [
           "@recipient" => $recipient
-        ));
+        ]);
         return null;
       }
     }
@@ -185,10 +185,10 @@ class DbLogMailer {
       if (!($recipients = $this->buildReceipientsList($email['recipients']))) {
         return null;
       }
-      $emails_params = array(
+      $emails_params = [
         "body" => $this->compileLogMessages($channel),
         "subject" => $email['subject']
-      );
+      ];
 
       // call doMail() from mailManager - this will then call dblog_mailer_mail() hook
       return $this->mailManager->doMail('dblog_mailer', 'log_email', $recipients,'en', $emails_params, $this->replyTo);
@@ -212,18 +212,18 @@ class DbLogMailer {
     $channel = $email['channel'];
 
     $insert = $this->database->insert('watchdog_mailer')
-      ->fields(array('wid', 'subject', 'recipients', 'message', 'delivery_status'));
+      ->fields(['wid', 'subject', 'recipients', 'message', 'delivery_status']);
 
     foreach ($this->logs as $log) {
       if ($log->type == $channel) {
 
-        $insert->values(array(
+        $insert->values([
           'wid' => $log->wid,
           'subject' => $email['subject'],
           'recipients' => $email['recipients'],
           'message' => $log->message,
           'delivery_status' => $delivery_status
-        ));
+        ]);
       }
     }
     $insert->execute();
@@ -240,7 +240,7 @@ class DbLogMailer {
     $severity = '4';
 
     $query = $this->database->select('watchdog', 'w');
-    $query->fields('w', array('wid', 'type', 'message', 'severity'));
+    $query->fields('w', ['wid', 'type', 'message', 'severity']);
     $query->orderBy('w.wid', 'ASC');
     $query->condition('w.type', $this->channels, "IN");
     $query->condition('w.severity', $severity, ">=");

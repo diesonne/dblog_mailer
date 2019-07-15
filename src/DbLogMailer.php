@@ -7,7 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Mail\MailManagerInterface;
 use Psr\Log\LoggerInterface;
-
+use Drupal\Core\Url;
 /**
  * Logs events in the watchdog database table.
  */
@@ -136,7 +136,9 @@ class DbLogMailer {
     $message = "";
     foreach ($this->logs as $log) {
       if ($log->type == $channel) {
-        $message .= $log->message . "\r\n\r\n";
+				$message .= ($this->config->get('message_length')
+									? \Drupal::l(substr(strip_tags($log->message),0,$this->config->get('message_length')?:100) . '...', Url::fromRoute('dblog.event', ['event_id' => $log->wid], ['absolute' => TRUE]))
+									: $log->message) . "\r\n\r\n";
       }
     }
     return $message;
@@ -236,18 +238,19 @@ class DbLogMailer {
    *    Return true if some logs where feched, false otherwise.
    * */
   public function fetchLogs() {
-    //@TODO: implement SEVERITY as a module setting
-    $severity = '4';
-
     $query = $this->database->select('watchdog', 'w');
     $query->fields('w', ['wid', 'type', 'message', 'severity']);
     $query->orderBy('w.wid', 'ASC');
     $query->condition('w.type', $this->channels, "IN");
-    $query->condition('w.severity', $severity, ">=");
-    $query->leftJoin('watchdog_mailer', 'wm', 'w.wid = wm.wid');
-    $query->isNull('wm.wid');
+		
+		if($severity = $this->config->get('severity')){
+			$query->condition('w.severity', $severity, 'IN');
+		}
 
-    if ($this->rowLimit > 0) {
+    $query->leftJoin('watchdog_mailer', 'wm', 'w.wid = wm.wid');
+		$query->isNull('wm.wid');
+		
+		if ($this->rowLimit > 0) {
       $query->range(0, $this->rowLimit);
     }
     $this->logs = $query->execute()->fetchAll();

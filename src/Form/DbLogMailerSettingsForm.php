@@ -4,7 +4,7 @@ namespace Drupal\dblog_mailer\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-
+use Drupal\Core\Logger\RfcLogLevel;
 /**
  * Class DbLogMailerSettingsForm
  * @package Drupal\dblog_mailer\Form
@@ -73,8 +73,24 @@ class DbLogMailerSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Enter one channel per line followed by the subject title and a list of recipients, ex:<br />channel|Email title|email1@domain.com;email2@domain.com'),
       '#default_value' => $config->get('emails_list'),
       '#rows' => 10,
-    ];
+		];
 
+		$form['emails']['severity'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Send this severity levels'),
+			'#description' => $this->t('Choose which severity levels to send via email. If nothing choosed - all the logs are sent.'),
+			'#options' => RfcLogLevel::getLevels(),
+			'#multiple' => TRUE,			
+			'#default_value' => $config->get('severity'),
+		];
+
+		$form['emails']['message_length'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Message length'),
+			'#description' => $this->t('Log messages could be large. This allows to limit the length of the log message an to include link to the full message. If the message length is provided - the message itself is created as link to the system with full message content.'),
+			'#default_value' => $config->get('message_length'),
+		];		
+		
     return parent::buildForm($form, $form_state);
   }
 
@@ -94,7 +110,9 @@ class DbLogMailerSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('dblog_mailer.settings')
       ->set('emails_list', $form_state->getValue('emails_list'))
-      ->set('enable', $form_state->getValue('enable'))
+			->set('enable', $form_state->getValue('enable'))
+			->set('severity', $form_state->getValue('severity'))			
+			->set('message_length', $form_state->getValue('message_length'))
       ->set('reply_to', $form_state->getValue('reply_to'))
       ->save();
 

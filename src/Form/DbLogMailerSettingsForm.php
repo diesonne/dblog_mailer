@@ -89,7 +89,14 @@ class DbLogMailerSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Message length'),
 			'#description' => $this->t('Log messages could be large. This allows to limit the length of the log message an to include link to the full message. If the message length is provided - the message itself is created as link to the system with full message content.'),
 			'#default_value' => $config->get('message_length'),
-		];		
+    ];
+    $form['emails']['default_row_limit'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Rows count'),
+			'#description' => $this->t('Count of rows to send within one email message.'),
+			'#default_value' => $config->get('default_row_limit')
+    ];
+    	
 		
     return parent::buildForm($form, $form_state);
   }
@@ -112,7 +119,8 @@ class DbLogMailerSettingsForm extends ConfigFormBase {
       ->set('emails_list', $form_state->getValue('emails_list'))
 			->set('enable', $form_state->getValue('enable'))
 			->set('severity', $form_state->getValue('severity'))			
-			->set('message_length', $form_state->getValue('message_length'))
+      ->set('message_length', $form_state->getValue('message_length'))
+      ->set('default_row_limit', $form_state->getValue('default_row_limit'))      
       ->set('reply_to', $form_state->getValue('reply_to'))
       ->save();
 

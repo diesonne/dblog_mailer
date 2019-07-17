@@ -70,7 +70,7 @@ class DbLogMailerSettingsForm extends ConfigFormBase {
     $form['emails']['emails_list'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Logs channels: emails configuration'),
-      '#description' => $this->t('Enter one channel per line followed by the subject title and a list of recipients, ex:<br />channel|Email title|email1@domain.com;email2@domain.com'),
+      '#description' => $this->t('Enter one channel setting per line followed by the subject title and a list of recipients, ex:<br />channel;channel2|Email title|email1@domain.com;email2@domain.com'),
       '#default_value' => $config->get('emails_list'),
       '#rows' => 10,
 		];

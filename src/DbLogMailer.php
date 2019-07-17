@@ -117,7 +117,7 @@ class DbLogMailer {
           $email_item['subject'] = $email_row[1];
           $email_item['recipients'] = $email_row[2];
           $this->emails[] = $email_item;
-          $this->channels[] = $email_row[0];
+          $this->channels = array_merge($this->channels, explode(';',$email_row[0]));
         }
       }
     }
@@ -135,10 +135,12 @@ class DbLogMailer {
   private function compileLogMessages($channel) {
     $message = "";
     foreach ($this->logs as $log) {
-      if ($log->type == $channel) {
-				$message .= ($this->config->get('message_length')
-									? \Drupal::l(substr(strip_tags($log->message),0,$this->config->get('message_length')?:100) . '...', Url::fromRoute('dblog.event', ['event_id' => $log->wid], ['absolute' => TRUE]))
-									: $log->message) . "\r\n\r\n";
+      if (in_array($log->type, $channel)) {
+				$msg = t($log->message, unserialize($log->variables));
+				$message .= format_date($log->timestamp) . ' ' . $log->type . ' ' . ($this->config->get('message_length')
+									? \Drupal::l(substr(strip_tags($msg),0,$this->config->get('message_length')?:100) . '...', Url::fromRoute('dblog.event', ['event_id' => $log->wid], ['absolute' => TRUE]))
+									  .'<br/>'
+									: $msg . "\r\n\r\n") ;
       }
     }
     return $message;
@@ -183,7 +185,7 @@ class DbLogMailer {
    * */
   private function sendEmail(array $email) {
     if (!empty($email['channel']) && !empty($email['subject']) && !empty($email['recipients'])) {
-      $channel = $email['channel'];
+      $channel = explode(';',$email['channel']);
       if (!($recipients = $this->buildReceipientsList($email['recipients']))) {
         return null;
       }
@@ -217,7 +219,7 @@ class DbLogMailer {
       ->fields(['wid', 'subject', 'recipients', 'message', 'delivery_status']);
 
     foreach ($this->logs as $log) {
-      if ($log->type == $channel) {
+      if (in_array($log->type, explode(';',$channel))) {
 
         $insert->values([
           'wid' => $log->wid,
@@ -239,15 +241,15 @@ class DbLogMailer {
    * */
   public function fetchLogs() {
     $query = $this->database->select('watchdog', 'w');
-    $query->fields('w', ['wid', 'type', 'message', 'severity']);
+    $query->fields('w', ['wid', 'type', 'message', 'variables', 'severity', 'timestamp']);
     $query->orderBy('w.wid', 'ASC');
     $query->condition('w.type', $this->channels, "IN");
-		
+				
 		if($severity = $this->config->get('severity')){
 			$query->condition('w.severity', $severity, 'IN');
 		}
 
-    $query->leftJoin('watchdog_mailer', 'wm', 'w.wid = wm.wid');
+		$query->leftJoin('watchdog_mailer', 'wm', 'w.wid = wm.wid');
 		$query->isNull('wm.wid');
 		
 		if ($this->rowLimit > 0) {

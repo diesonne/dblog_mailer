@@ -2,6 +2,7 @@
 
 namespace Drupal\dblog_mailer;
 
+use Drupal\Core\Link;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
@@ -104,7 +105,7 @@ class DbLogMailer {
    * Initialize the emails and channels properties from configuration.
    * */
   private function initializeEmailsAndChannels() {
-    $emails_list = explode("\r\n", Unicode::strtolower($this->config->get('emails_list')));
+    $emails_list = explode("\r\n", mb_strtolower($this->config->get('emails_list')));
     if (!empty($emails_list)) {
       foreach ($emails_list as $emails_list_item) {
         $email_row = explode('|', $emails_list_item);
@@ -137,8 +138,8 @@ class DbLogMailer {
     foreach ($this->logs as $log) {
       if (in_array($log->type, $channel)) {
 				$msg = t($log->message, unserialize($log->variables));
-				$message .= format_date($log->timestamp) . ' ' . $log->type . ' ' . ($this->config->get('message_length')
-									? \Drupal::l(substr(strip_tags($msg),0,$this->config->get('message_length')?:100) . '...', Url::fromRoute('dblog.event', ['event_id' => $log->wid], ['absolute' => TRUE]))
+				$message .= \Drupal::service('date.formatter')->format($log->timestamp) . ' ' . $log->type . ' ' . ($this->config->get('message_length')
+									? Link::fromTextAndUrl(substr(strip_tags($msg),0,$this->config->get('message_length')?:100) . '...', Url::fromRoute('dblog.event', ['event_id' => $log->wid], ['absolute' => TRUE]))
 									  .'<br/>'
 									: $msg . "\r\n\r\n") ;
       }

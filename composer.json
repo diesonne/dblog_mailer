@@ -1,0 +1,12 @@
+{
+  "name": "drupal/dblog_mailer",
+  "description": "db log",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/dblog_mailer",
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/7"
+    }
+  }
+}
